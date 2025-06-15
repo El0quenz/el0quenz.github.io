@@ -3,81 +3,603 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS50P Fortschritt Tracker</title>
-    <link rel="stylesheet" href="style.css">
+    <title>CS50P Progress Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .weeks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .week-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .week-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+        
+        .week-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .week-progress {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            transition: background 0.3s ease;
+        }
+        
+        .week-progress.completed {
+            background: #4CAF50;
+        }
+        
+        .week-progress.partial {
+            background: #FF9800;
+        }
+        
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+        
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        
+        .task-label {
+            flex: 1;
+            font-size: 1rem;
+            color: #555;
+            transition: color 0.3s ease;
+        }
+        
+        .task-item.completed .task-label {
+            color: #4CAF50;
+            text-decoration: line-through;
+        }
+        
+        .daily-habits {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .daily-habits h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .habit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .habit-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .habit-item:hover {
+            background: #e9ecef;
+        }
+        
+        .habit-checkbox {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        
+        .time-input {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .time-input h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .time-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .time-form input {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            width: 120px;
+        }
+        
+        .time-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            transition: width 0.3s ease;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .time-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .time-form input {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header class="text-center py-16">
-            <h1>CS50P Fortschritt Tracker</h1>
-            <p class="text-secondary">Der einfachste Weg, deinen CS50P Fortschritt zu verfolgen</p>
-        </header>
+        <div class="header">
+            <h1>🎓 CS50P Progress Tracker</h1>
+            <p>Verfolge deinen Fortschritt mit Stil und Motivation</p>
+        </div>
 
-        <!-- Progress Summary -->
-        <section class="progress-summary card mb-24">
-            <div class="card__body">
-                <div class="flex justify-between items-center mb-16">
-                    <div>
-                        <h2>Dein Fortschritt</h2>
-                        <p class="completion-text">0% abgeschlossen</p>
-                    </div>
-                    <div class="streak-counter">
-                        <span class="streak-number">0</span>
-                        <span class="streak-label">Tage Streak</span>
-                    </div>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-weeks">0</div>
+                <div class="stat-label">Wochen abgeschlossen</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total-time">0</div>
+                <div class="stat-label">Minuten gelernt</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="overall-progress">0%</div>
+                <div class="stat-label">Gesamtfortschritt</div>
+            </div>
+        </div>
+
+        <div class="daily-habits">
+            <h2>📅 Tägliche Lerngewohnheiten</h2>
+            <div class="habit-grid">
+                <div class="habit-item">
+                    <input type="checkbox" class="habit-checkbox" id="habit-studied">
+                    <label for="habit-studied">Heute gelernt</label>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 0%"></div>
+                <div class="habit-item">
+                    <input type="checkbox" class="habit-checkbox" id="habit-practiced">
+                    <label for="habit-practiced">Code praktiziert</label>
                 </div>
-                <div class="motivational-message mt-16">
-                    <p id="motivation-text">Beginne heute deine CS50P Reise! 🚀</p>
+                <div class="habit-item">
+                    <input type="checkbox" class="habit-checkbox" id="habit-notes">
+                    <label for="habit-notes">Notizen gemacht</label>
+                </div>
+                <div class="habit-item">
+                    <input type="checkbox" class="habit-checkbox" id="habit-review">
+                    <label for="habit-review">Material wiederholt</label>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- Weekly Progress -->
-        <section class="weekly-progress mb-24">
-            <h2 class="mb-16">Wöchentlicher Fortschritt</h2>
-            <div class="weeks-grid" id="weeks-container">
-                <!-- Weeks will be dynamically populated -->
+        <div class="time-input">
+            <h3>⏱️ Heutige Lernzeit eintragen</h3>
+            <div class="time-form">
+                <input type="number" id="minutes-input" placeholder="Minuten" min="0">
+                <button class="btn" onclick="saveStudyTime()">Zeit speichern</button>
+                <div id="time-feedback" style="color: #4CAF50; font-weight: bold;"></div>
             </div>
-        </section>
+        </div>
 
-        <!-- Daily Habits -->
-        <section class="daily-habits mb-24">
-            <div class="card">
-                <div class="card__body">
-                    <h2 class="mb-16">Tägliche Lerngewohnheiten</h2>
-                    <p class="text-secondary mb-16">Verfolge deine täglichen Aktivitäten für heute</p>
-                    <div class="habits-list" id="habits-container">
-                        <!-- Daily habits will be dynamically populated -->
-                    </div>
-                    <div class="study-time mt-16">
-                        <label class="form-label">Lernzeit heute (Minuten):</label>
-                        <input type="number" id="study-time-input" class="form-control" min="0" max="600" placeholder="z.B. 60">
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div class="weeks-grid" id="weeks-container">
+            <!-- Wochen werden hier dynamisch eingefügt -->
+        </div>
 
-        <!-- Simplicity Chart -->
-        <section class="chart-section mb-24">
-            <div class="card">
-                <div class="card__body text-center">
-                    <h3 class="mb-16">Warum Checklisten funktionieren</h3>
-                    <img src="https://pplx-res.cloudinary.com/image/upload/v1749984088/pplx_code_interpreter/99f67990_udcvtv.jpg" 
-                         alt="Vergleich verschiedener CS50P Progress Tracking Methoden nach Einfachheit" 
-                         class="chart-image">
-                    <p class="text-secondary mt-8">Einfachheit ist der Schlüssel zum Erfolg</p>
-                </div>
-            </div>
-        </section>
-
-        <footer class="text-center py-16">
-            <p class="text-secondary">Bleib dran und erreiche deine Ziele! 💪</p>
-        </footer>
+        <div class="footer">
+            <p>Viel Erfolg bei CS50P! 🚀 Deine Daten werden sicher in der Cloud gespeichert.</p>
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, orderBy, where } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
+
+        // Firebase-Konfiguration (deine Daten)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdTPYUqqZej8d835Ild7Hw34r7QzCUcFU",
+            authDomain: "cs50p-tracker.firebaseapp.com",
+            projectId: "cs50p-tracker",
+            storageBucket: "cs50p-tracker.firebasestorage.app",
+            messagingSenderId: "782567749186",
+            appId: "1:782567749186:web:5adc119ee2ac93b86a1fdb",
+            measurementId: "G-B1FCZ8MVJV"
+        };
+
+        // Firebase initialisieren
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // CS50P Wochen-Daten
+        const weeks = [
+            { id: 'week0', title: 'Week 0', topic: 'Functions, Variables' },
+            { id: 'week1', title: 'Week 1', topic: 'Conditionals' },
+            { id: 'week2', title: 'Week 2', topic: 'Loops' },
+            { id: 'week3', title: 'Week 3', topic: 'Exceptions' },
+            { id: 'week4', title: 'Week 4', topic: 'Libraries' },
+            { id: 'week5', title: 'Week 5', topic: 'Unit Tests' },
+            { id: 'week6', title: 'Week 6', topic: 'File I/O' },
+            { id: 'week7', title: 'Week 7', topic: 'Regular Expressions' },
+            { id: 'week8', title: 'Week 8', topic: 'Object-Oriented Programming' },
+            { id: 'week9', title: 'Week 9', topic: 'Et Cetera' },
+            { id: 'final', title: 'Final Project', topic: 'Capstone Project' }
+        ];
+
+        // Fortschritt speichern
+        async function saveProgress(weekId, type, completed) {
+            try {
+                await addDoc(collection(db, "progress"), {
+                    week: weekId,
+                    type: type,
+                    completed: completed,
+                    timestamp: new Date(),
+                    date: new Date().toDateString()
+                });
+                updateStats();
+            } catch (error) {
+                console.error("Fehler beim Speichern:", error);
+            }
+        }
+
+        // Lernzeit speichern
+        window.saveStudyTime = async function() {
+            const minutes = parseInt(document.getElementById('minutes-input').value);
+            if (!minutes || minutes <= 0) {
+                alert('Bitte gib eine gültige Minutenzahl ein!');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "study_sessions"), {
+                    duration_minutes: minutes,
+                    date: new Date().toDateString(),
+                    timestamp: new Date()
+                });
+                
+                document.getElementById('time-feedback').textContent = `${minutes} Minuten gespeichert! 🎉`;
+                document.getElementById('minutes-input').value = '';
+                
+                setTimeout(() => {
+                    document.getElementById('time-feedback').textContent = '';
+                }, 3000);
+                
+                updateStats();
+            } catch (error) {
+                console.error("Fehler beim Speichern der Zeit:", error);
+            }
+        }
+
+        // Tägliche Gewohnheiten speichern
+        async function saveHabit(habitId, checked) {
+            try {
+                await addDoc(collection(db, "daily_habits"), {
+                    habit: habitId,
+                    completed: checked,
+                    date: new Date().toDateString(),
+                    timestamp: new Date()
+                });
+            } catch (error) {
+                console.error("Fehler beim Speichern der Gewohnheit:", error);
+            }
+        }
+
+        // Statistiken aktualisieren
+        async function updateStats() {
+            try {
+                // Gesamte Lernzeit berechnen
+                let totalMinutes = 0;
+                const studyQuery = await getDocs(collection(db, "study_sessions"));
+                studyQuery.forEach((doc) => {
+                    totalMinutes += doc.data().duration_minutes || 0;
+                });
+
+                // Abgeschlossene Wochen zählen
+                const progressQuery = await getDocs(collection(db, "progress"));
+                const weekProgress = {};
+                
+                progressQuery.forEach((doc) => {
+                    const data = doc.data();
+                    if (!weekProgress[data.week]) {
+                        weekProgress[data.week] = { lecture: false, problemset: false };
+                    }
+                    weekProgress[data.week][data.type] = data.completed;
+                });
+
+                let completedWeeks = 0;
+                Object.values(weekProgress).forEach(week => {
+                    if (week.lecture && week.problemset) {
+                        completedWeeks++;
+                    }
+                });
+
+                // UI aktualisieren
+                document.getElementById('total-time').textContent = totalMinutes;
+                document.getElementById('total-weeks').textContent = completedWeeks;
+                document.getElementById('overall-progress').textContent = 
+                    Math.round((completedWeeks / weeks.length) * 100) + '%';
+
+            } catch (error) {
+                console.error("Fehler beim Aktualisieren der Stats:", error);
+            }
+        }
+
+        // Wochen-UI erstellen
+        function createWeeksUI() {
+            const container = document.getElementById('weeks-container');
+            
+            weeks.forEach(week => {
+                const weekCard = document.createElement('div');
+                weekCard.className = 'week-card';
+                weekCard.innerHTML = `
+                    <div class="week-header">
+                        <div>
+                            <div class="week-title">${week.title}</div>
+                            <div style="color: #666; font-size: 0.9rem;">${week.topic}</div>
+                        </div>
+                        <div class="week-progress" id="progress-${week.id}">0%</div>
+                    </div>
+                    <ul class="task-list">
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" id="${week.id}-lecture" 
+                                   onchange="handleTaskChange('${week.id}', 'lecture', this.checked)">
+                            <label for="${week.id}-lecture" class="task-label">Lecture angeschaut</label>
+                        </li>
+                        <li class="task-item">
+                            <input type="checkbox" class="task-checkbox" id="${week.id}-problemset" 
+                                   onchange="handleTaskChange('${week.id}', 'problemset', this.checked)">
+                            <label for="${week.id}-problemset" class="task-label">Problem Set gelöst</label>
+                        </li>
+                    </ul>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="bar-${week.id}" style="width: 0%"></div>
+                    </div>
+                `;
+                container.appendChild(weekCard);
+            });
+        }
+
+        // Task-Änderungen behandeln
+        window.handleTaskChange = function(weekId, type, checked) {
+            saveProgress(weekId, type, checked);
+            updateWeekProgress(weekId);
+        }
+
+        // Wochen-Fortschritt aktualisieren
+        function updateWeekProgress(weekId) {
+            const lecture = document.getElementById(`${weekId}-lecture`).checked;
+            const problemset = document.getElementById(`${weekId}-problemset`).checked;
+            
+            let progress = 0;
+            if (lecture) progress += 50;
+            if (problemset) progress += 50;
+            
+            const progressElement = document.getElementById(`progress-${weekId}`);
+            const barElement = document.getElementById(`bar-${weekId}`);
+            
+            progressElement.textContent = progress + '%';
+            barElement.style.width = progress + '%';
+            
+            // Klassen für Styling
+            progressElement.className = 'week-progress';
+            if (progress === 100) {
+                progressElement.classList.add('completed');
+            } else if (progress > 0) {
+                progressElement.classList.add('partial');
+            }
+        }
+
+        // Event Listener für Gewohnheiten
+        function setupHabitListeners() {
+            document.querySelectorAll('.habit-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    saveHabit(this.id, this.checked);
+                });
+            });
+        }
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', function() {
+            createWeeksUI();
+            setupHabitListeners();
+            updateStats();
+            
+            // Lade gespeicherte Daten beim Start
+            loadSavedData();
+        });
+
+        // Gespeicherte Daten laden
+        async function loadSavedData() {
+            try {
+                // Lade Fortschritt
+                const progressQuery = await getDocs(collection(db, "progress"));
+                progressQuery.forEach((doc) => {
+                    const data = doc.data();
+                    const checkbox = document.getElementById(`${data.week}-${data.type}`);
+                    if (checkbox) {
+                        checkbox.checked = data.completed;
+                        updateWeekProgress(data.week);
+                    }
+                });
+
+                // Lade heutige Gewohnheiten
+                const today = new Date().toDateString();
+                const habitsQuery = query(
+                    collection(db, "daily_habits"), 
+                    where("date", "==", today)
+                );
+                const habitsSnapshot = await getDocs(habitsQuery);
+                
+                habitsSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const checkbox = document.getElementById(data.habit);
+                    if (checkbox) {
+                        checkbox.checked = data.completed;
+                    }
+                });
+
+            } catch (error) {
+                console.error("Fehler beim Laden der Daten:", error);
+            }
+        }
+    </script>
 </body>
 </html>
