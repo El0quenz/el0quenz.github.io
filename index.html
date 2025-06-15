@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS50P Fortschritt Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="text-center py-16">
+            <h1>CS50P Fortschritt Tracker</h1>
+            <p class="text-secondary">Der einfachste Weg, deinen CS50P Fortschritt zu verfolgen</p>
+        </header>
+
+        <!-- Progress Summary -->
+        <section class="progress-summary card mb-24">
+            <div class="card__body">
+                <div class="flex justify-between items-center mb-16">
+                    <div>
+                        <h2>Dein Fortschritt</h2>
+                        <p class="completion-text">0% abgeschlossen</p>
+                    </div>
+                    <div class="streak-counter">
+                        <span class="streak-number">0</span>
+                        <span class="streak-label">Tage Streak</span>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="motivational-message mt-16">
+                    <p id="motivation-text">Beginne heute deine CS50P Reise! 🚀</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Weekly Progress -->
+        <section class="weekly-progress mb-24">
+            <h2 class="mb-16">Wöchentlicher Fortschritt</h2>
+            <div class="weeks-grid" id="weeks-container">
+                <!-- Weeks will be dynamically populated -->
+            </div>
+        </section>
+
+        <!-- Daily Habits -->
+        <section class="daily-habits mb-24">
+            <div class="card">
+                <div class="card__body">
+                    <h2 class="mb-16">Tägliche Lerngewohnheiten</h2>
+                    <p class="text-secondary mb-16">Verfolge deine täglichen Aktivitäten für heute</p>
+                    <div class="habits-list" id="habits-container">
+                        <!-- Daily habits will be dynamically populated -->
+                    </div>
+                    <div class="study-time mt-16">
+                        <label class="form-label">Lernzeit heute (Minuten):</label>
+                        <input type="number" id="study-time-input" class="form-control" min="0" max="600" placeholder="z.B. 60">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simplicity Chart -->
+        <section class="chart-section mb-24">
+            <div class="card">
+                <div class="card__body text-center">
+                    <h3 class="mb-16">Warum Checklisten funktionieren</h3>
+                    <img src="https://pplx-res.cloudinary.com/image/upload/v1749984088/pplx_code_interpreter/99f67990_udcvtv.jpg" 
+                         alt="Vergleich verschiedener CS50P Progress Tracking Methoden nach Einfachheit" 
+                         class="chart-image">
+                    <p class="text-secondary mt-8">Einfachheit ist der Schlüssel zum Erfolg</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center py-16">
+            <p class="text-secondary">Bleib dran und erreiche deine Ziele! 💪</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
