@@ -246,6 +246,14 @@
             background: #5a6fd8;
         }
         
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
         .progress-bar {
             width: 100%;
             height: 8px;
@@ -266,6 +274,24 @@
             color: white;
             margin-top: 30px;
             opacity: 0.8;
+        }
+        
+        .debug-info {
+            background: rgba(0,0,0,0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .reset-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
         }
         
         @media (max-width: 768px) {
@@ -295,6 +321,10 @@
             <p>Verfolge deinen Fortschritt mit Stil und Motivation</p>
         </div>
 
+        <div class="debug-info" id="debug-info">
+            Firebase-Status: Initialisiere... | Letzte Aktualisierung: nie
+        </div>
+
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number" id="total-weeks">0</div>
@@ -312,6 +342,9 @@
 
         <div class="daily-habits">
             <h2>📅 Tägliche Lerngewohnheiten</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">
+                Diese Häkchen werden täglich um Mitternacht automatisch zurückgesetzt.
+            </p>
             <div class="habit-grid">
                 <div class="habit-item">
                     <input type="checkbox" class="habit-checkbox" id="habit-studied">
@@ -341,6 +374,14 @@
             </div>
         </div>
 
+        <div class="reset-section">
+            <h3>🧹 Datenbank-Management</h3>
+            <p style="color: #666; margin-bottom: 15px;">
+                Falls du Probleme mit doppelten Einträgen hast oder neu starten möchtest.
+            </p>
+            <button class="btn btn-danger" onclick="resetAllData()">Alle Daten löschen</button>
+        </div>
+
         <div class="weeks-grid" id="weeks-container">
             <!-- Wochen werden hier dynamisch eingefügt -->
         </div>
@@ -352,7 +393,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js';
-        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, orderBy, where } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, getDocs, updateDoc, doc, query, orderBy, where, setDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
 
         // Firebase-Konfiguration (deine Daten)
         const firebaseConfig = {
@@ -369,6 +410,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Debug-Funktion
+        function updateDebugInfo(message) {
+            const debugElement = document.getElementById('debug-info');
+            const timestamp = new Date().toLocaleTimeString();
+            debugElement.textContent = `Firebase-Status: ${message} | Letzte Aktualisierung: ${timestamp}`;
+        }
+
         // CS50P Wochen-Daten
         const weeks = [
             { id: 'week0', title: 'Week 0', topic: 'Functions, Variables' },
@@ -384,23 +432,27 @@
             { id: 'final', title: 'Final Project', topic: 'Capstone Project' }
         ];
 
-        // Fortschritt speichern
+        // KORRIGIERTE Fortschritt-Speicherfunktion - nutzt setDoc statt addDoc
         async function saveProgress(weekId, type, completed) {
             try {
-                await addDoc(collection(db, "progress"), {
+                const docId = `${weekId}-${type}`;
+                await setDoc(doc(db, "progress", docId), {
                     week: weekId,
                     type: type,
                     completed: completed,
                     timestamp: new Date(),
                     date: new Date().toDateString()
-                });
+                }, { merge: true });
+                
+                updateDebugInfo(`Fortschritt gespeichert: ${weekId} ${type}`);
                 updateStats();
             } catch (error) {
                 console.error("Fehler beim Speichern:", error);
+                updateDebugInfo(`Fehler: ${error.message}`);
             }
         }
 
-        // Lernzeit speichern
+        // Lernzeit speichern - verwendet weiterhin addDoc für Sessions
         window.saveStudyTime = async function() {
             const minutes = parseInt(document.getElementById('minutes-input').value);
             if (!minutes || minutes <= 0) {
@@ -422,27 +474,93 @@
                     document.getElementById('time-feedback').textContent = '';
                 }, 3000);
                 
+                updateDebugInfo(`${minutes} Minuten gespeichert`);
                 updateStats();
             } catch (error) {
                 console.error("Fehler beim Speichern der Zeit:", error);
+                updateDebugInfo(`Fehler: ${error.message}`);
             }
         }
 
-        // Tägliche Gewohnheiten speichern
+        // KORRIGIERTE Tägliche Gewohnheiten - nutzt eindeutige IDs
         async function saveHabit(habitId, checked) {
             try {
-                await addDoc(collection(db, "daily_habits"), {
+                const today = new Date().toDateString();
+                const docId = `${habitId}-${today}`;
+                
+                await setDoc(doc(db, "daily_habits", docId), {
                     habit: habitId,
                     completed: checked,
-                    date: new Date().toDateString(),
+                    date: today,
                     timestamp: new Date()
-                });
+                }, { merge: true });
+                
+                updateDebugInfo(`Gewohnheit gespeichert: ${habitId}`);
             } catch (error) {
                 console.error("Fehler beim Speichern der Gewohnheit:", error);
+                updateDebugInfo(`Fehler: ${error.message}`);
             }
         }
 
-        // Statistiken aktualisieren
+        // Tägliche Gewohnheiten zurücksetzen (automatisch bei neuem Tag)
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            const lastVisit = localStorage.getItem('lastVisit');
+            
+            if (lastVisit && lastVisit !== today) {
+                // Neuer Tag erkannt - Häkchen zurücksetzen
+                document.querySelectorAll('.habit-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updateDebugInfo('Tägliche Gewohnheiten zurückgesetzt (neuer Tag)');
+            }
+            
+            localStorage.setItem('lastVisit', today);
+        }
+
+        // Alle Daten löschen (für Debugging)
+        window.resetAllData = async function() {
+            if (!confirm('Wirklich ALLE Daten löschen? Diese Aktion kann nicht rückgängig gemacht werden!')) {
+                return;
+            }
+
+            try {
+                // Lösche alle Progress-Dokumente
+                const progressSnapshot = await getDocs(collection(db, "progress"));
+                const deletePromises = [];
+                
+                progressSnapshot.forEach((docSnapshot) => {
+                    deletePromises.push(deleteDoc(doc(db, "progress", docSnapshot.id)));
+                });
+
+                // Lösche alle Study Sessions
+                const studySnapshot = await getDocs(collection(db, "study_sessions"));
+                studySnapshot.forEach((docSnapshot) => {
+                    deletePromises.push(deleteDoc(doc(db, "study_sessions", docSnapshot.id)));
+                });
+
+                // Lösche alle Daily Habits
+                const habitsSnapshot = await getDocs(collection(db, "daily_habits"));
+                habitsSnapshot.forEach((docSnapshot) => {
+                    deletePromises.push(deleteDoc(doc(db, "daily_habits", docSnapshot.id)));
+                });
+
+                await Promise.all(deletePromises);
+                
+                // UI zurücksetzen
+                document.querySelectorAll('.task-checkbox').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.habit-checkbox').forEach(cb => cb.checked = false);
+                
+                updateStats();
+                updateDebugInfo('Alle Daten erfolgreich gelöscht');
+                
+            } catch (error) {
+                console.error("Fehler beim Löschen:", error);
+                updateDebugInfo(`Fehler beim Löschen: ${error.message}`);
+            }
+        }
+
+        // Statistiken aktualisieren - korrigiert für eindeutige Dokumente
         async function updateStats() {
             try {
                 // Gesamte Lernzeit berechnen
@@ -452,7 +570,7 @@
                     totalMinutes += doc.data().duration_minutes || 0;
                 });
 
-                // Abgeschlossene Wochen zählen
+                // Abgeschlossene Wochen zählen - verwendet jetzt eindeutige Dokument-IDs
                 const progressQuery = await getDocs(collection(db, "progress"));
                 const weekProgress = {};
                 
@@ -477,8 +595,11 @@
                 document.getElementById('overall-progress').textContent = 
                     Math.round((completedWeeks / weeks.length) * 100) + '%';
 
+                updateDebugInfo('Statistiken aktualisiert');
+
             } catch (error) {
                 console.error("Fehler beim Aktualisieren der Stats:", error);
+                updateDebugInfo(`Stats-Fehler: ${error.message}`);
             }
         }
 
@@ -556,19 +677,11 @@
             });
         }
 
-        // Initialisierung
-        document.addEventListener('DOMContentLoaded', function() {
-            createWeeksUI();
-            setupHabitListeners();
-            updateStats();
-            
-            // Lade gespeicherte Daten beim Start
-            loadSavedData();
-        });
-
-        // Gespeicherte Daten laden
+        // Gespeicherte Daten laden - korrigiert für eindeutige IDs
         async function loadSavedData() {
             try {
+                updateDebugInfo('Lade gespeicherte Daten...');
+                
                 // Lade Fortschritt
                 const progressQuery = await getDocs(collection(db, "progress"));
                 progressQuery.forEach((doc) => {
@@ -596,10 +709,23 @@
                     }
                 });
 
+                updateDebugInfo('Daten erfolgreich geladen');
+
             } catch (error) {
                 console.error("Fehler beim Laden der Daten:", error);
+                updateDebugInfo(`Ladefehler: ${error.message}`);
             }
         }
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDebugInfo('Initialisiere Tracker...');
+            createWeeksUI();
+            setupHabitListeners();
+            checkDailyReset();
+            loadSavedData();
+            updateStats();
+        });
     </script>
 </body>
 </html>
